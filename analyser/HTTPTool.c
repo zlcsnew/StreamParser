@@ -3,10 +3,25 @@
 #include"functions.h"
 #include<string.h>
 #include<netinet/in.h>
+#include <arpa/inet.h>
 #include<pcap.h>
 #include<string.h>
 struct HTTP_flowInfo HTTPArray[1024];
 int HTTP_flowNum=0;
+
+char * convertIP(u_int ip){
+   struct in_addr ipAddr;
+   //memset(&ipAddr,0,sizeof(struct in_addr));
+   //memcpy(&ipAddr,&ip,sizeof(struct in_addr));
+   char *result=NULL;
+   ipAddr.s_addr=ip;
+   result=inet_ntoa(ipAddr);
+   //result[19]='\0';
+   //printf("%d  \n",sizeof(struct in_addr));
+   //printf("%s  \n",result);
+   return result;
+}
+
 int baseinfo_compare_HTTP(struct flowInfo baseInfo,struct flowInfo baseInfo2){
       return (baseInfo.srcIP==baseInfo2.srcIP)&&(baseInfo.dstIP==baseInfo2.dstIP)&&(baseInfo.dstPort==baseInfo2.dstPort)&&(baseInfo.srcPort==baseInfo2.srcPort);
 }
@@ -52,6 +67,10 @@ void showHTTPInfo(){
      for(;i<HTTP_flowNum;i++){
         printf("\n\nflow %d\n",i);
         int j;
+        printf("host1: %s:%d  \n",convertIP(HTTPArray[i].Baseinfo.srcIP),HTTPArray[i].Baseinfo.srcPort);
+        printf("host1: %s:%d  \n",convertIP(HTTPArray[i].Baseinfo.dstIP),HTTPArray[i].Baseinfo.dstPort);
+        //printf("src %s:%d  \n",convertIP(HTTPArray[i].Baseinfo.srcIP),HTTPArray[i].Baseinfo.srcPort);
+        //printf("dst %s:%d \n",convertIP(HTTPArray[i].Baseinfo.dstIP),HTTPArray[i].Baseinfo.dstPort);
         for(j=0;j<HTTPArray[i].URL_list_length;j++){
             printf("%s  %s\n",HTTPArray[i].HTTP_method[j],HTTPArray[i].URI_list[j]);
         }
@@ -94,7 +113,7 @@ void HTTP_Process(int posi,u_char *app_data,int data_length){
     //HTTP HOST
     if (!HTTPArray[posi].has_host){
         u_char * HOST_start=strstr(app_data,"Host:");
-        u_char * HOST_end=strstr(HOST_start+strlen(str),"\r\n");
+        u_char * HOST_end=strstr(HOST_start,"\r\n");
         strncpy(HTTPArray[posi].HTTP_host,HOST_start,HOST_end-HOST_start);
         HTTPArray[posi].HTTP_host[HOST_end-HOST_start]='\0';
         HTTPArray[posi].has_host=1;
@@ -102,12 +121,12 @@ void HTTP_Process(int posi,u_char *app_data,int data_length){
     //HTTP UA
     if (!HTTPArray[posi].has_ua){
         u_char * UA_start=strstr(app_data,"User-Agent");
-        u_char * UA_end=strstr(app_data,"\r\n");
+        u_char * UA_end=strstr(UA_start,"\r\n");
         strncpy(HTTPArray[posi].HTTP_UA,UA_start,UA_end-UA_start);
         HTTPArray[posi].HTTP_UA[UA_end-UA_start]='\0';
         HTTPArray[posi].has_ua=1;
     }
-
+    
     if(!HTTPArray[posi].has_cookie){
         u_char * cookie_start=strstr(app_data,"Cookie:");
         if (cookie_start==NULL){
