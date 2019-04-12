@@ -22,4 +22,5 @@ int main(){
         pcap_setfilter(handle,&filter);
 	pcap_loop(handle, 10000, packet_process, NULL);
         showTLSInfo();
+        showHTTPInfo();
 }
