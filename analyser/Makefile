@@ -1,0 +1,12 @@
+main:	main.o main_process.o TLSTool.o Tools.o HTTPTool.o
+	gcc main.o main_process.o Tools.o TLSTool.o HTTPTool.o -o main -lpcap
+main.o:	main.c functions.h packet_header.h
+	gcc -c main.c -lpcap
+main_process.o: main_process.c functions.h packet_header.h generStruct.h TLSStruct.h HTTPStruct.h
+	gcc -c main_process.c -lpcap
+TLSTool.o: TLSTool.c TLSStruct.h generStruct.h functions.h
+	gcc -c TLSTool.c -lpcap
+Tools.o: Tools.c generStruct.h
+	gcc -c Tools.c -lpcap
+HTTPTool.o: HTTPTool.c HTTPStruct.h generStruct.h functions.h
+	gcc -c HTTPTool.c -lpcap
